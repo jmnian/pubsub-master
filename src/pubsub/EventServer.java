@@ -10,16 +10,11 @@ public class EventServer {
 	private String hostName = "";
 	private EventManager manager = null;
 	
-	/**
-	 * Constructor that makes a new EventManager and loads pre-built Topics
-	 * @param args command-line arguments for hostname and port
-	 */
 	public EventServer(String[] args) {
-		if (args.length > 0)  
-    		parseArgs(args);
+		if(args.length > 0) parseArgs(args);
+    		
     	try {
-    		if (hostName.length() == 0) 
-    			hostName = InetAddress.getLocalHost().getHostAddress();
+    		hostName = InetAddress.getLocalHost().getHostAddress();
     		manager = new EventManager(true);
     		Naming.rebind("//" + hostName + ":" + port + "/EventManager", manager);
             System.out.println("EventManager bound in registry at " + hostName + ":" + port);
@@ -31,42 +26,17 @@ public class EventServer {
 		}
 	}
 	
-    /**
-     * Constructor that is passed an EventManager that was created outside the class.  
-     * 
-     * @param args command-line arguments for port and hostname
-     * @param manager that will be communicating with the clients
-     */
-	public EventServer(String[] args, EventManager manager) {
-		if (args.length > 0) 
-    		parseArgs(args);
-    	try {
-    		if (hostName.length() == 0) 
-    			hostName = InetAddress.getLocalHost().getHostAddress();
-    		Naming.rebind("//" + hostName + ":" + port + "/EventManager", manager);
-            System.out.println(manager + " bound in registry at " + hostName + ":" + port);
-            manager.startService();
-		} catch (Exception e) {
-			System.out.println( "Binding error");
-			System.out.println( "Did you run 'rmiregistry [port] &' before running 'java "+manager+" [-p <port>]'?" );
-			System.exit(1);
-		}
-	}
-	
 	private void parseArgs(String args[]) {
-		for (int i = 0; i < args.length; i ++) {	
-			if (args[i].equals("-p")) port = Integer.parseInt(args[++i]);
-			else {
+		for(int i = 0; i < args.length; i ++) {	
+			if(args[i].equals("-p")) {
+				port = Integer.parseInt(args[++i]);
+			} else {
 				System.out.println("Correct usage: java EventServer [-p <portnumber>]");
 				System.exit(1);
 			}
 		}
 	}
 
-	/**
-	 * @param args port number and hostname to use
-	 * @throws RemoteException 
-	 */
 	public static void main(String[] args) throws RemoteException {
 		EventServer server = new EventServer(args);
 		server.manager.commandLineInterface();

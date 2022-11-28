@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import pubsub.interfaces.EventManInterface;
+import pubsub.interfaces.Server;
 import pubsub.interfaces.Publisher;
 import pubsub.interfaces.Subscriber;
 
@@ -18,7 +18,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	public static final int TIMEOUT = 1000;
 	
 	private static final long serialVersionUID = 1L;
-	protected EventManInterface server;
+	protected Server server;
 	//Used by the subscriber
 	protected ArrayList<Topic> subscrTopics;
 	protected ArrayList<String> subscrKeywords;
@@ -34,7 +34,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	 * @param _server taken from the rmi registry 
 	 * @throws RemoteException
 	 */
-	public PubSubAgent(EventManInterface _server) throws RemoteException {
+	public PubSubAgent(Server _server) throws RemoteException {
 		this.server = _server;
 		if (_server != null)
 			this.ID = server.sayHello(this);
@@ -62,7 +62,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	 * @param server to bind with
 	 * @throws RemoteException if server is unavailable
 	 */
-	public void setServer(EventManInterface server) throws RemoteException {
+	public void setServer(Server server) throws RemoteException {
 		this.server = server;
 		this.ID = server.sayHello(this);
 	}
@@ -78,7 +78,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	 * 
 	 * @return server currently associated with this agent
 	 */
-	public EventManInterface getServer() {
+	public Server getServer() {
 		return this.server;
 	}
 	

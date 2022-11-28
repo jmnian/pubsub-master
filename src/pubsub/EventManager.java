@@ -9,10 +9,10 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-import pubsub.interfaces.EventManInterface;
+import pubsub.interfaces.Server;
 import pubsub.interfaces.Subscriber;
 
-public class EventManager extends UnicastRemoteObject implements EventManInterface {
+public class EventManager extends UnicastRemoteObject implements Server {
 	
 	private static final long serialVersionUID = 1L;
 	//Amount of time to wait between attempts to contact a non-responsive agent
@@ -25,9 +25,6 @@ public class EventManager extends UnicastRemoteObject implements EventManInterfa
 	protected LinkedHashSet<TopicContainer> allTopicContainers;
 	//Events are stored here while they continue to try to contact a missing subscriber
 	protected LinkedList<Event> pendingEvents;
-	// Maps from the name of a keyword to the ID of the clients that receive those keyword events
-	// in order to allow for efficient content-filtering
-	protected HashMap<String, LinkedHashSet<Integer>> contentFilter;
 	// Maps from the ID of a client to the actual RMI object of the client 
 	// This allows the client to leave and come back later without 
 	//changing the unique identifier
@@ -41,7 +38,6 @@ public class EventManager extends UnicastRemoteObject implements EventManInterfa
 	public EventManager(boolean preload) throws RemoteException {
 		allTopicContainers = new LinkedHashSet<>();
 		pendingEvents = new LinkedList<>();
-		contentFilter = new HashMap<>();
 		clientBinding = new HashMap<>();
 	}
 
@@ -164,8 +160,6 @@ public class EventManager extends UnicastRemoteObject implements EventManInterfa
 			for( TopicContainer tc : allTopicContainers) {
 				if (tc.getTopic().getID() == event.getTopic().getID() ) {
 					event.setID(++eventID).addSubscriberList(tc.getSubscribers());
-//					for(String key : event.getKeywords() )
-//						event.addSubscriberList( contentFilter.get(key) );
 					if (notifySubscribers(event) > 0) {
 						synchronized (pendingEvents) {
 							pendingEvents.add(event);
