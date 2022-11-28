@@ -3,20 +3,23 @@ package pubsub;
 import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
-public class PubSubClient {
+import pubsub.interfaces.EventClient;
+import pubsub.interfaces.EventManager;
+
+public class PubSubClient extends UnicastRemoteObject implements EventClient {
 
     private int id = 0;
 	private EventManager manager;
     
-    public PubSubClient(int id, int port) {
+    public PubSubClient(int id, int port) throws RemoteException {
 		this.id = id;
 
     	try {
     		String hostName = InetAddress.getLocalHost().getHostAddress();
-			this.manager = (EventManager) Naming.lookup("//" + hostName + ":" + port + "/EventManager");
+			this.manager = (EventManager) Naming.lookup("//" + hostName + ":" + port + "/EventServer");
 			System.out.println("Connected to server at " + port);
 		} catch (Exception e) {
 			System.out.println(e);
@@ -29,12 +32,14 @@ public class PubSubClient {
      	int port = 1099;
 
 		for (int i = 0; i < args.length; i ++) {	
-			if (args[i].equals("-p")) 
+			if (args[i].equals("-p")) {
 				port = Integer.parseInt(args[++i]);
-			if (args[i].equals("-id")) 
+			} else if (args[i].equals("-d")) {
 				id = Integer.parseInt(args[++i]);
-			else {
-				System.out.println("Correct usage: java PubSubClient [-p <portnumber>] [-id <idnumber>]");
+			} else {
+				System.out.println(args[i]);
+
+				System.out.println("Correct usage: java PubSubClient [-p <portnumber>] [-d <idnumber>]");
 				System.exit(1);
 			}
 		}
@@ -60,7 +65,7 @@ public class PubSubClient {
 	}
 
 	private void unsubscribe(String topic) throws RemoteException {
-		boolean res = this.manager.unSubscribe(topic, id); 
+		boolean res = this.manager.unsubscribe(topic, id); 
 
 		if(!res) {
 			System.out.println("Topic doesn't exist");
@@ -84,7 +89,7 @@ public class PubSubClient {
 
 		boolean continueExec = true;
 		while (continueExec) {
-			System.out.println("Client actions [1-4]:");
+			System.out.println("Client actions [1-5]:");
 			System.out.println(" 1: Create a topic");
 			System.out.println(" 2: Publish an event");
 			System.out.println(" 3: Subscribe to a topic");
