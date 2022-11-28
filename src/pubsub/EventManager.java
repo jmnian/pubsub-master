@@ -1,12 +1,5 @@
 package pubsub;
-//******************************************************************************
-//File:    EventManager.java
-//Package: pubsub
-//Unit:    Distributed Programming Individual Project
-//******************************************************************************
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;

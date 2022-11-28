@@ -1,9 +1,5 @@
 package pubsub.interfaces;
-//******************************************************************************
-//File:    EventManInterface.java
-//Package: pubsub.interfaces;
-//Unit:    Distributed Programming Individual Project
-//******************************************************************************
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 

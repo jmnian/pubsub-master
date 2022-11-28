@@ -1,18 +1,11 @@
 package pubsub;
 
-//******************************************************************************
-//File:    PubSubClient.java
-//Package: None
-//Unit:    Distributed Programming Individual Project
-//******************************************************************************
-
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 
-import pubsub.PubSubAgent;
 import pubsub.interfaces.EventManInterface;
 
 public class PubSubClient {

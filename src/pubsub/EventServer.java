@@ -1,17 +1,8 @@
 package pubsub;
 
-//******************************************************************************
-//File:    EventServer.java
-//Package: None
-//Unit:    Distributed Programming Individual Project
-//******************************************************************************
 import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-
-import pubsub.EventManager;
-import pubsub.interfaces.EventManInterface;
 
 public class EventServer {
 
@@ -35,7 +26,7 @@ public class EventServer {
             manager.startService();
 		} catch (Exception e) {
 			System.out.println( "EventManager error");
-			System.out.println( "Did you run 'rmiregistry [port] &' first then 'java EventServer [-p <port>]'?" );
+			System.out.println( "Did you run 'rmiregistry [port] &' first?" );
 			System.exit(1);
 		}
 	}
@@ -47,7 +38,7 @@ public class EventServer {
      * @param manager that will be communicating with the clients
      */
 	public EventServer(String[] args, EventManager manager) {
-		if (args.length > 0)  
+		if (args.length > 0) 
     		parseArgs(args);
     	try {
     		if (hostName.length() == 0) 
@@ -62,21 +53,11 @@ public class EventServer {
 		}
 	}
 	
-	/**
-	 * This method parses any inputs for the port to use, and stores it into
-	 * the instance variable prior to the constructor
-	 * 
-	 * @param args passed in on command line
-	 */
 	private void parseArgs(String args[]) {
-		
 		for (int i = 0; i < args.length; i ++) {	
 			if (args[i].equals("-p")) port = Integer.parseInt(args[++i]);
-			else if (args[i].equals("-host")) hostName = args[++i];
 			else {
-				System.out.println("Correct usage: java EventServer [-host <hostName>] [-p <portnumber>]");
-				System.out.println("  -host: override localhost to set the host to <hostName>.");
-				System.out.println("  -p: override default RMI Registry port 1099 to <port>.");
+				System.out.println("Correct usage: java EventServer [-p <portnumber>]");
 				System.exit(1);
 			}
 		}

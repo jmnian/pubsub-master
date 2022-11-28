@@ -1,21 +1,20 @@
 ## step 1: compile
 ```
-cd pubsub-master
-javac *.java interfaces/* -d out
-cd out
+javac *.java interfaces/* -d bin
+cd bin
 ```
 
 ## step 2:
 start node 1 at port 1099
 ```
 rmiregistry 1099 &
-java -classpath ./ pubsub.EventServer -host 127.0.0.1 -p 1099
+java -classpath ./ pubsub.EventServer -p 1099
 ```
 
 start node 2 at port 1098
 ```
 rmiregistry 1098 &
-java -classpath ./ pubsub.EventServer -host 127.0.0.1 -p 1098
+java -classpath ./ pubsub.EventServer -p 1098
 ```
 
 start sentinel at port 6666
@@ -23,7 +22,7 @@ EventServerMain as sentinel to monitor cluster(1099,1098), it will choose max nu
 if 1099 goes down, 1098 will be promoted to be leader
 ```
 rmiregistry 6666 &
-java -classpath ./ pubsub.EventServerMain -host 127.0.0.1 -p 6666 -cluster 1099,1098
+java -classpath ./ pubsub.EventServerMain -p 6666 -cluster 1099,1098
 ```
 
 start publisher to connect to cluster

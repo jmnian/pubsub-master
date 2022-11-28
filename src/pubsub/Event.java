@@ -1,9 +1,5 @@
 package pubsub;
-//******************************************************************************
-//File:    Event.java
-//Package: pubsub
-//Unit:    Distributed Programming Individual Project
-//******************************************************************************
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -14,26 +10,13 @@ public class Event implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private int id = 0;
 	private Topic topic;
-	private String title;
 	private String content;
-	private String[] keywords;
 	private LinkedHashSet<Integer> toBeNotified;
 	
-	/**
-	 * Constructor
-	 *  
-	 * @param _t Topic of event
-	 * @param _title title of event
-	 * @param _content the content
-	 * @param _keywords used for content filtering. if none are passed in, this defaults to the Topic keywords
-	 */
-	public Event(Topic _t, String _title, String _content, String... _keywords) {
-		this.topic = _t;
-		this.title = _title;
-		this.content = _content;
-		this.keywords = _keywords;
-		if (keywords == null)
-			this.keywords = topic.getKeywords();
+	public Event(Topic topic, String content) {
+		this.topic = topic;
+		this.content = content;
+
 		toBeNotified = new LinkedHashSet<>();
 	}
 	
@@ -47,68 +30,30 @@ public class Event implements Serializable {
 		return this;
 	}
 	
-	/**
-	 * 
-	 * @return this unique Event ID
-	 */
 	public int getID() {
 		return id;
 	}
 	
-	/**
-	 * 
-	 * @return the Topic of this Event
-	 */
 	public Topic getTopic() {
 		return topic;
 	}
 	
-	/**
-	 * 
-	 * @return the title of this Event
-	 */
-	public String getTitle() {
-		return this.title;
-	}
-	
-	/**
-	 * 
-	 * @return the content of this Event
-	 */
 	public String getContent() {
 		return content;
 	}
 	
-	/**
-	 * 
-	 * @return keywords used for filtering that match to this event
-	 */
-	public String[] getKeywords() {
-		return keywords;
-	}
-	
-	/**
-	 * Override the Obj equals in order to hash an Event correctly, where an Event is uniquely
-	 * determined by its Topic and Title
-	 */
 	public boolean equals(Object obj) {
 		Event e = (Event) obj;
-		return this.topic.equals(e.topic) && this.title.equals(e.title);
+		return this.topic.equals(e.topic) && this.content.equals(e.content);
 	}
 	
-	/**
-	 * Must override the regular hashCode in order to hash Events to collide with duplicates
-	 */
 	public int hashCode() {
-		return topic.hashCode() + title.hashCode();
+		return topic.hashCode() + content.hashCode();
 	}
 	
-	/**
-	 * human-readable representation of this Event
-	 */
 	public String toString() {
-		String event = "Event " +this.id +"-"+ this.title + "\n" +
-					   "\tPublished under Topic "+ topic.getID() +"-"+ topic.getName() + "\n";
+		String event = "Event " +this.id +"-"+ this.content + "\n" +
+					   "Published under Topic "+ topic.getID() +"-"+ topic.getName() + "\n";
 		return event;
 	}
 	

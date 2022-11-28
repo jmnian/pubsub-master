@@ -3,9 +3,6 @@ package pubsub;
 import pubsub.interfaces.EventManInterface;
 import pubsub.interfaces.Subscriber;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

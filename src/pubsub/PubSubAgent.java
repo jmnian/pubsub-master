@@ -1,6 +1,5 @@
 package pubsub;
 
-import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import pubsub.interfaces.EventManInterface;
 import pubsub.interfaces.Publisher;
 import pubsub.interfaces.Subscriber;
 
-public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subscriber, Serializable {
+public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subscriber {
 
 	//Used by the agent to try to contact the server repeatedly before giving up
 	public static final int MAX_TRIES = 100;
@@ -209,7 +208,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 						try { Thread.sleep(TIMEOUT); } catch(Exception f) {}
 					}
 				}
-				System.err.println("Could not contact server for Event "+event.getTitle()+" creation. Please try again later.");
+				System.err.println("Could not contact server for Event "+event.getContent()+" creation. Please try again later.");
 			}
 		}).start();
 	}
@@ -224,8 +223,8 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 		Topic t = null;
 		if ( (t = findTopic(in)) != null) {
 			System.out.println("Enter event title:");
-			String title = in.nextLine().trim();
-			return new Event(t, title, null, null);
+			String content = in.nextLine().trim();
+			return new Event(t, content);
 		}
 		return null;
 	}
@@ -268,7 +267,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 		System.out.println("Enter topic name:");
 		String name = in.nextLine().trim();
 		
-		return new Topic(name, null);
+		return new Topic(name);
 	}
 	
 	//////////////////////////////////////////////////////////////
