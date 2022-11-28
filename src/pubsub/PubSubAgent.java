@@ -7,105 +7,53 @@ import java.util.List;
 import java.util.Scanner;
 
 import pubsub.interfaces.Server;
-import pubsub.interfaces.Publisher;
-import pubsub.interfaces.Subscriber;
+import pubsub.interfaces.Client;
 
-public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subscriber {
+public class PubSubAgent extends UnicastRemoteObject implements Client {
+
+	private static final long serialVersionUID = 1L;
 
 	//Used by the agent to try to contact the server repeatedly before giving up
 	public static final int MAX_TRIES = 100;
 	//Used to make a thread sleep rather than repeated trying to contact the server
 	public static final int TIMEOUT = 1000;
 	
-	private static final long serialVersionUID = 1L;
-	protected Server server;
+	private Server server;
 	//Used by the subscriber
-	protected ArrayList<Topic> subscrTopics;
-	protected ArrayList<String> subscrKeywords;
-	protected ArrayList<Event> recvdEvents;
+	private ArrayList<Topic> subscrTopics;
+	private ArrayList<Event> recvdEvents;
 	//Used by the publisher
-	protected ArrayList<Topic> myPubTopics;
-	protected ArrayList<Event> myPubEvents;
+	private ArrayList<Topic> myPubTopics;
+	private ArrayList<Event> myPubEvents;
 	//Unique identifier assigned by the server
-	protected Integer ID;
+	private Integer ID;
 	/**
 	 * Constructor 
 	 * 
 	 * @param _server taken from the rmi registry 
 	 * @throws RemoteException
 	 */
-	public PubSubAgent(Server _server) throws RemoteException {
-		this.server = _server;
-		if (_server != null)
+	public PubSubAgent(Server server) throws RemoteException {
+		this.server = server;
+		if (server != null)
 			this.ID = server.sayHello(this);
 		subscrTopics = new ArrayList<>();
-		subscrKeywords = new ArrayList<>();
 		recvdEvents = new ArrayList<>();
 		myPubTopics = new ArrayList<>();
 		myPubEvents = new ArrayList<>();
 	}
-	/**
-	 * Overwrite Obj equals for hashing purposes, and since an ID must be a unique identifier
-	 */
+	
 	public boolean equals(Object obj) {
 		return this.ID.equals(((PubSubAgent)obj).ID);
 	}
-	/**
-	 * Overwrite Obj hashing to ensure collisions for equal Agent ID's
-	 */
+	
 	public int hashCode() {
 		return this.ID.hashCode();
-	}
-	/**
-	 * This method allows the server to be set after construction of this object
-	 * 
-	 * @param server to bind with
-	 * @throws RemoteException if server is unavailable
-	 */
-	public void setServer(Server server) throws RemoteException {
-		this.server = server;
-		this.ID = server.sayHello(this);
-	}
-	/**
-	 * This agent has come back onto the network and now must re-establish communication with the server
-	 *  
-	 * @throws RemoteException
-	 */
-	public void rebindToServer() throws RemoteException {
-//		server.sayHello(this.ID, this);
-	}
-	/**
-	 * 
-	 * @return server currently associated with this agent
-	 */
-	public Server getServer() {
-		return this.server;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////
 	//  Subscriber Methods
 	////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * Print out the topics this agent is subscribed to
-	 */
-	public void listSubscribedTopics() {
-		for (Topic t : subscrTopics)
-			System.out.print(t);
-	}
-	/**
-	 * Print out the keywords this agent is subscribed to 
-	 */
-	public void listSubscribedKeywords() {
-		for (String k : subscrKeywords)
-			System.out.println(k);
-	}
-	/**
-	 * Print all the received events that have come in during the life of this agent
-	 */
-	public void listReceivedEvents() {
-		for (Event e : recvdEvents)
-			System.out.print(e);
-	}
 	/**
 	 * Used to notify the remote client
 	 * @param event Event that the Subscriber will be receiving from the server
@@ -170,24 +118,7 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	//  Publisher Methods
 	////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * Prints the events created by the Publisher side of this agent
-	 */
-	public void viewMyEvents() {
-		for (Event e : myPubEvents) 
-			System.out.print(e);
-	}
-	/**
-	 * Prints the Topics advertised by the Publisher side of this agent
-	 */
-	public void viewMyTopics() {
-		for (Topic t : myPubTopics) 
-			System.out.print(t);
-	}
-	
-	/**
 	 * ASynchronously publishes this event to all subscribers on the server
-	 * 
-	 * @param event Event to be published
 	 */
 	public void publish(final Event event) {
 		if (event == null)
@@ -273,109 +204,53 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 	//////////////////////////////////////////////////////////////
 	// Main-thread execution of user interface
 	//////////////////////////////////////////////////////////////
-			
-	/**
-	 * This is how the user interacts with the system from the command line.  Gives options for:
-	 * 1. Acting as a publisher
-	 * 2. Acting as a subscriber
-	 * 3. Saving the agent to memory using serialization and quitting
-	 * 4. Quitting without saving
-	 * 
-	 * @throws RemoteException
-	 */
+	
 	public void commandLineInterface() throws RemoteException {
 		Scanner in = new Scanner(System.in);
-		do {
-			System.out.println("\n What would you like to do? Enter choice [1-4]:");
-			System.out.println(" 1: Act as publisher");
-			System.out.println(" 2: Act as subscriber");
-			System.out.print(": ");
-			int choice = -1;
-			try {
-				choice = in.nextInt(); in.nextLine();
-			} catch (Exception e) { in.nextLine(); }
-			switch (choice) {
-				case 1: publisherChoices(in); break;
-				case 2: subscriberChoices(in); break;
-				default: System.out.println("Input not recognized");
-			}
-		} while (true);
-	}
-	/**
-	 * The submenu of Publisher-options for this agent
-	 * 
-	 * @param in Scanner to read from console 
-	 */
-	public void publisherChoices(Scanner in) {
 		boolean continueExec = true;
-		do {
-			System.out.println("Publisher actions [1-5]:");
+		while (continueExec) {
+			System.out.println("Client actions [1-4]:");
 			System.out.println(" 1: Create a topic");
 			System.out.println(" 2: Publish an event");
-			System.out.println(" 3: View your created topics");
-			System.out.println(" 4: View your created events");
+			System.out.println(" 3: Subscribe to a topic");
+			System.out.println(" 4: Unsubscribe from a topic");
 			System.out.println(" 5: Go back");
 			System.out.print(": ");
 			int choice = -1;
+
 			try {
-				choice = in.nextInt(); in.nextLine();
-			} catch (Exception e) { in.nextLine(); }
-			switch (choice) {
-				case 1: create(makeTopic(in)); break;
-				case 2: publish(makeEvent(in)); break;
-				case 3: viewMyTopics(); break;
-				case 4: viewMyEvents(); break;
-				case 5: continueExec = false; break;
-				default: System.out.println("Input not recognized");
+				choice = in.nextInt(); 
+				in.nextLine();
+			} catch (Exception e) { 
+				in.nextLine(); 
 			}
-		} while (continueExec);
-	}
-	/**
-	 * The submenu of Subscriber-options for this agent
-	 * 
-	 * @param in Scanner to read from console 
-	 */
-	public void subscriberChoices(Scanner in) {
-		boolean continueExec = true;
-		do {
-			System.out.println("Subscriber actions [1-4]:");
-			System.out.println(" 1: Subscribe to a topic");
-			System.out.println(" 2: Unsubscribe from a topic");
-			System.out.println(" 3: Show currently subscribed topics");
-			System.out.println(" 4: Go back");
-			System.out.print(": ");
-			int choice = -1;
-			try {
-				choice = in.nextInt(); in.nextLine();
-			} catch (Exception e) { in.nextLine(); }
+
 			Topic t = null;
 			switch (choice) {
 				case 1: 
+					create(makeTopic(in)); 
+					break;
+				case 2: 
+					publish(makeEvent(in)); 
+					break;
+				case 3: 
 					if ( (t = findTopic(in)) != null)
 						subscribe(t);
 					break;
-				case 2:
+				case 4:
 					if ( (t = findTopic(in)) != null)
 						unsubscribe(t);
 					break;
-				case 3: listSubscribedTopics(); break;
-				case 4: continueExec = false; break;
-				default: System.out.println("Input not recognized");
+				case 5: 
+					continueExec = false; 
+					break;
+				default: 
+					System.out.println("Input not recognized");
 			}
-		} while (continueExec);
+		}
 	}
 	
-	//////////////////////////////////////////////////////////////
-	// Protected methods
-	//////////////////////////////////////////////////////////////
-	
-	/**
-	 * Creates a Topic from the command line for the Publisher to advertise
-	 * 
-	 * @param in Scanner
-	 * @return Topic created
-	 */
-	protected Topic findTopic(Scanner in) {
+	private Topic findTopic(Scanner in) {
 		System.out.println("Enter the name or ID number of the Topic:"); 
 		String input = in.nextLine().trim();
 		List<Topic> fromServer;
@@ -399,39 +274,5 @@ public class PubSubAgent extends UnicastRemoteObject implements Publisher, Subsc
 			System.out.println("Topic not found.");
 			return null;
 		} 
-	}
-
-	protected Topic findTopic(String name) {
-		List<Topic> fromServer;
-		try {
-			fromServer = server.getTopics();
-		} catch (RemoteException f) { 
-			System.out.println("Cannot contact server. Try again later"); 
-			return null;
-		}
-		
-		for (Topic t : fromServer ) 
-			if (t.getName().equalsIgnoreCase( name ))
-				return t;
-		
-		System.out.println("Topic not found.");
-		return null; 
-	}
-
-	protected Topic findTopic(Integer ID) {
-		List<Topic> fromServer;
-		try {
-			fromServer = server.getTopics();
-		} catch (RemoteException f) { 
-			System.out.println("Cannot contact server. Try again later"); 
-			return null;
-		}
-		
-		for (Topic t : fromServer ) 
-			if (t.getID() == ID)
-				return t;
-		
-		System.out.println("Topic not found.");
-		return null; 
 	}
 }

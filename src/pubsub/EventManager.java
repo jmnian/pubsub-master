@@ -9,8 +9,8 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import pubsub.interfaces.Client;
 import pubsub.interfaces.Server;
-import pubsub.interfaces.Subscriber;
 
 public class EventManager extends UnicastRemoteObject implements Server {
 	
@@ -18,32 +18,27 @@ public class EventManager extends UnicastRemoteObject implements Server {
 	//Amount of time to wait between attempts to contact a non-responsive agent
 	public static final int TIMEOUT = 1000;
 	//counters used to assign Unique IDs
-	protected Integer topicID = 0;
-	protected Integer subscriberID = 0;
-	protected Integer eventID = 0;
+	private Integer topicID = 0;
+	private Integer subscriberID = 0;
+	private Integer eventID = 0;
 	//Storage for all Topic Containers (topic plus subscribers)
-	protected LinkedHashSet<TopicContainer> allTopicContainers;
+	private LinkedHashSet<TopicContainer> allTopicContainers;
 	//Events are stored here while they continue to try to contact a missing subscriber
-	protected LinkedList<Event> pendingEvents;
+	private LinkedList<Event> pendingEvents;
 	// Maps from the ID of a client to the actual RMI object of the client 
 	// This allows the client to leave and come back later without 
 	//changing the unique identifier
-	protected HashMap<Integer, Subscriber> clientBinding;
+	private HashMap<Integer, Client> clientBinding;
 
-	/**
-	 * Constructor
-	 * @param preload whether to load a pre-made selection of topics at startup
-	 * @throws RemoteException for RMI errors
-	 */
-	public EventManager(boolean preload) throws RemoteException {
+	public EventManager() throws RemoteException {
 		allTopicContainers = new LinkedHashSet<>();
 		pendingEvents = new LinkedList<>();
 		clientBinding = new HashMap<>();
 	}
 
-	public int sayHello(Subscriber sub) throws RemoteException {
+	public int sayHello(Client c) throws RemoteException {
 		synchronized (clientBinding) {
-			clientBinding.put(++subscriberID, sub);
+			clientBinding.put(++subscriberID, c);
 			return subscriberID;
 		}
 	}
@@ -51,32 +46,23 @@ public class EventManager extends UnicastRemoteObject implements Server {
 	/**
 	 * see interface javadoc
 	 */
-	public int sayHello(Integer ID, Subscriber sub) throws RemoteException {
+	public int sayHello(Integer ID, Client c) throws RemoteException {
 		synchronized (clientBinding) {
-			clientBinding.put(ID, sub);
+			clientBinding.put(ID, c);
 			return ID;
 		}
 	}
 	
-	/**
-	 * see interface javadoc
-	 */
 	public void unbind(Integer ID) {
 		synchronized (clientBinding) {
 			clientBinding.put(ID, null);
 		}
 	}
-	/**
-	 * see interface javadoc
-	 */
+	
 	public void unbindPermanent(Integer ID) {
 		synchronized (clientBinding) {
 			clientBinding.remove(ID);
 		}
-	}
-	
-	public Subscriber getSubscriber(Integer ID) {
-		return clientBinding.get(ID);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////
@@ -227,40 +213,39 @@ public class EventManager extends UnicastRemoteObject implements Server {
 		}
 	}
 	
-	////////////////////////////////////////////////////////////////////////////////////
-	//  Command-line interface services 
-	////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * This is how a user interacts with the server side of the pub-sub system.  Allows for
-	 * 1. Showing all topics
-	 * 2. Showing all subscribers
-	 * 3. Quitting
-	 * Note you cannot show all events because they are not stored after being fully delivered
-	 * 
-	 * @throws RemoteException
-	 */
 	public void commandLineInterface() throws RemoteException {
-		Scanner in = new Scanner(System.in);
-		do {
+		Scanner input = new Scanner(System.in);
+
+		while (true) {
 			System.out.println("What would you like to do? Enter choice [1-3]:");
 			System.out.println(" 1: Show topics");
 			System.out.println(" 2: Show subscribers");
 			System.out.println(" 3: Quit server");
 			System.out.print(": ");
 			int choice = -1;
+
 			try {
-				choice = in.nextInt(); in.nextLine();
-			} catch (Exception e) { in.nextLine(); }
+				choice = input.nextInt(); 
+				input.nextLine();
+			} catch (Exception e) { 
+				input.nextLine(); 
+			}
+
 			switch (choice) {
 				case 1: 
 					for (TopicContainer tc : allTopicContainers)
 						System.out.print( tc.getTopic() );
 					break;
-				case 2: showSubscribers(); break;
-				case 3: in.close(); System.exit(0); 
-				default: System.out.println("Input not recognized");
+				case 2: 
+					showSubscribers(); 
+					break;
+				case 3: 
+					input.close(); 
+					System.exit(0); 
+				default: 
+					System.out.println("Input not recognized");
 			}
-		} while (true);
+		}
 	}
 	
 	/**
@@ -271,6 +256,6 @@ public class EventManager extends UnicastRemoteObject implements Server {
 	public void showSubscribers() throws RemoteException {
 		for( TopicContainer tc : allTopicContainers) 
 			System.out.print("Topic: " +tc.getTopic().getName()+ "\n" +
-							 "\tSubscribers: " + tc.printSubscribers());
+							 "Subscribers: " + tc.printSubscribers());
 	}
 }

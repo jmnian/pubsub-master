@@ -15,10 +15,10 @@ public class EventServer {
     		
     	try {
     		hostName = InetAddress.getLocalHost().getHostAddress();
-    		manager = new EventManager(true);
+    		manager = new EventManager();
     		Naming.rebind("//" + hostName + ":" + port + "/EventManager", manager);
+
             System.out.println("EventManager bound in registry at " + hostName + ":" + port);
-            manager.startService();
 		} catch (Exception e) {
 			System.out.println( "EventManager error");
 			System.out.println( "Did you run 'rmiregistry [port] &' first?" );
@@ -39,6 +39,7 @@ public class EventServer {
 
 	public static void main(String[] args) throws RemoteException {
 		EventServer server = new EventServer(args);
+		server.manager.startService();
 		server.manager.commandLineInterface();
 	}
 }

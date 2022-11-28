@@ -116,6 +116,6 @@ public class TopicContainer {
 	 * Synchronously overrides the Object toString 
 	 */
 	public synchronized String toString() {
-		return topic.toString() + "\n\tSubscribers: " + this.printSubscribers();
+		return topic.toString() + "\nSubscribers: " + this.printSubscribers();
 	}
 }

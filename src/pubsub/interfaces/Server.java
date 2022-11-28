@@ -17,8 +17,6 @@ public interface Server extends Remote {
 	public boolean removeSubscriber(Integer subID, Topic t) throws RemoteException;
 	
 	public ArrayList<Topic> getTopics() throws RemoteException;
-	public Subscriber getSubscriber(Integer ID) throws RemoteException;
-	
 
 	// /**
 	//  * This method establishes the relationship between server and client
@@ -27,7 +25,7 @@ public interface Server extends Remote {
 	//  * @return unique int ID of this client for the Server to track
 	//  * @throws RemoteException if server is offline
 	//  */
-	public int sayHello(Subscriber sub) throws RemoteException;
+	public int sayHello(Client c) throws RemoteException;
 	
 	// /**
 	//  * This method re-establishes the relationship between server and client
@@ -37,7 +35,7 @@ public interface Server extends Remote {
 	//  * @return same ID this client had previously
 	//  * @throws RemoteException if server is offline
 	//  */
-	public int sayHello(Integer ID, Subscriber sub) throws RemoteException;
+	public int sayHello(Integer ID, Client c) throws RemoteException;
 	
 	/**
 	 * Subscriber sets ID to null while he is offline, saysHello once he comes back online to re-establish
