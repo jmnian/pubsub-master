@@ -4,8 +4,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Set;
 
-import pubsub.EventServer;
-
 public interface EventManager extends Remote {
 
 	public void addClient(int id, EventClient c) throws RemoteException;
