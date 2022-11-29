@@ -2,6 +2,8 @@ package pubsub.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 public interface EventManager extends Remote {
@@ -25,6 +27,10 @@ public interface EventManager extends Remote {
 	public String getRegisteredName() throws RemoteException;
 
 	public void setRegisteredName(String name) throws RemoteException; 
+
+	public HashMap<String, HashSet<Integer>> getSubscriptionMap() throws RemoteException;
+
+	public HashMap<Integer, EventClient> getClientMap() throws RemoteException;
 
 	public void bully(EventManager sender) throws Exception;
 

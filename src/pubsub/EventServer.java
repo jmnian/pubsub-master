@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
@@ -38,6 +39,9 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		this.leader = failureDetector.getLeader(this);
 		subscriptionMap = new HashMap<>();
 		clientMap = new HashMap<>();
+		if (this.leader.getRegisteredName() != this.registeredName) {	
+			deepCopyLeaderData();
+		}
 	}
 
 	//Methods
@@ -150,6 +154,7 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		System.out.println("Leader is: " + leader.getRegisteredName());
 	}
 
+	
 	//Leader Election
 	public void bully(EventManager sender) throws Exception {
 		sender.ok();
@@ -171,10 +176,8 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 			try {
 				em = (EventManager) Naming.lookup(name);
 			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (NotBoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			em.setLeader(this);
@@ -191,10 +194,8 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 			try {
 				em = (EventManager) Naming.lookup(name);
 			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (NotBoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			em.bully(this);
@@ -220,7 +221,22 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 
 
 	//Helper functions
-	
+	private void deepCopyLeaderData() throws RemoteException {
+		Map<String, HashSet<Integer>> leaderSubMap = this.leader.getSubscriptionMap();
+		Map<Integer, EventClient> leaderClientMap = this.leader.getClientMap();
+		for (Map.Entry<String, HashSet<Integer>> e : leaderSubMap.entrySet()) {
+			HashSet<Integer> set = new HashSet<>();
+			for (Integer i : e.getValue()) {
+				set.add(i);
+			}
+			this.subscriptionMap.put(e.getKey(), set);
+		}
+		for (Map.Entry<Integer, EventClient> e : leaderClientMap.entrySet()) {
+			this.clientMap.put(e.getKey(), e.getValue());
+		}
+	}
+
+
 	// choice can be "higher" or "lower"
 	private List<String> getServersWithHigherOrLowerId(String choice) throws RemoteException {
 		List<String> res = new ArrayList<>();
@@ -288,6 +304,15 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 	public EventManager getLeader(EventManager sender) throws RemoteException {
 		return this.leader;
 	}
+
+	public HashMap<String, HashSet<Integer>> getSubscriptionMap() throws RemoteException {
+		return this.subscriptionMap;
+	}
+
+	public HashMap<Integer, EventClient> getClientMap() throws RemoteException {
+		return this.clientMap;
+	}
+
 
 	//main
 	public static void main(String[] args) throws Exception {
