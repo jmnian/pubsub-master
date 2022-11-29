@@ -5,15 +5,22 @@ cd bin
 ```
 
 ## step 2:
-start multiple server node using command
+start failure detector using command
 ```
-rmiregistry 1099 &
-java pubsub.EventServer -p 1099
+rmiregistry 6666 &
+java pubsub.FailureDetector -p 6666
 ```
 
 ## step 3:
-
-start client to publish & subscribe 
+start multiple server node using command, replace xxxx with a valid port number
 ```
-java pubsub.PubSubClient -p 1099
+rmiregistry xxxx &
+java pubsub.EventServer -p xxxx
+```
+
+## step 4:
+
+start client to publish & subscribe
+```
+java pubsub.PubSubClient -p 6666
 ```

@@ -131,6 +131,8 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 					System.out.println("Input not recognized");
 			}
 		}
+		in.close();
+		System.exit(1);
 	}
 
 	public void notify(String topic, String msg) {

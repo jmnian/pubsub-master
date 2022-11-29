@@ -2,6 +2,9 @@ package pubsub.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Set;
+
+import pubsub.EventServer;
 
 public interface EventManager extends Remote {
 
@@ -15,4 +18,17 @@ public interface EventManager extends Remote {
 
 	public boolean unsubscribe(String topic, Integer clientID) throws RemoteException;
 
+	public Set<String> getServerPool() throws RemoteException;
+
+	public EventManager getLeader(EventManager sender) throws RemoteException;
+
+	public void setLeader(EventManager leader) throws RemoteException;
+
+	public String getRegisteredName() throws RemoteException;
+
+	public void setRegisteredName(String name) throws RemoteException; 
+
+	public void bully(EventManager sender) throws Exception;
+
+	public void ok() throws RemoteException;
 }
