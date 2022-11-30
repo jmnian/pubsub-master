@@ -1,17 +1,20 @@
 package pubsub;
 
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -23,11 +26,14 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 	private static final long serialVersionUID = 1L;
 	private int OKsReceived;
 	private int id;
+	private AtomicLong msgId;
 	private String registeredName;
 	protected EventManager leader;
 	private EventManager failureDetector;
 	private HashMap<String, HashSet<Integer>> subscriptionMap;
 	private HashMap<Integer, EventClient> clientMap;
+	private HashSet<String> handledMsg;
+	private HashMap<String, EventManager> serverMap;
 
 	//Constructors
 	public EventServer() throws RemoteException {}
@@ -36,9 +42,14 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		id = port;
 		setFailureDetector();
 		this.registeredName = name;
-		this.leader = failureDetector.getLeader(this);
+		this.msgId = new AtomicLong();
+		handledMsg = new HashSet<>();
 		subscriptionMap = new HashMap<>();
+		serverMap = new HashMap<>();
 		clientMap = new HashMap<>();
+
+		this.leader = failureDetector.getLeader(this);
+
 		if (this.leader.getRegisteredName() != this.registeredName) {	
 			deepCopyLeaderData();
 		}
@@ -84,16 +95,26 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		}
 	}
 
-	public void addClient(int id, EventClient c) {
+	public void addClient(int id, EventClient c, boolean needBroadcast) throws RemoteException {
 		synchronized (clientMap) {
 			clientMap.put(id, c);
+
+			if(needBroadcast) {
+				String nextMsgId = this.registeredName + msgId.getAndIncrement();
+				gossipMsg(2, 1, new String[]{nextMsgId, "addClient", String.valueOf(id)}, c);
+			}
 		}
 	}
 	
-	public void createTopic(String topic) throws RemoteException {
+	public void createTopic(String topic, boolean needBroadcast) throws RemoteException {
 		if(!subscriptionMap.containsKey(topic)) {
 			synchronized (subscriptionMap) {
 				subscriptionMap.put(topic, new HashSet<>());
+
+				if(needBroadcast) {
+					String nextMsgId = this.registeredName + msgId.getAndIncrement();
+					gossipMsg(2, 1, new String[]{nextMsgId, "createTopic", topic});
+				}
 			}
 		}
 	}
@@ -112,23 +133,33 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		return true;
 	}
 	
-	public boolean subscribe(String topic, Integer clientID) throws RemoteException {
+	public boolean subscribe(String topic, Integer clientID, boolean needBroadcast) throws RemoteException {
 		if(!subscriptionMap.containsKey(topic)) return false;
 
 		HashSet<Integer> subscribers = subscriptionMap.get(topic);
 		synchronized (subscribers) {
 			subscribers.add(clientID);
+
+			if(needBroadcast) {
+				String nextMsgId = this.registeredName + msgId.getAndIncrement();
+				gossipMsg(2, 1, new String[]{nextMsgId, "subscribe", topic, String.valueOf(clientID)});
+			}
 		}
 
 		return true;
 	}
 
-	public boolean unsubscribe(String topic, Integer clientID) throws RemoteException {
+	public boolean unsubscribe(String topic, Integer clientID, boolean needBroadcast) throws RemoteException {
 		if(!subscriptionMap.containsKey(topic)) return false;
 
 		HashSet<Integer> subscribers = subscriptionMap.get(topic);
 		synchronized (subscribers) {
 			subscribers.remove(clientID);
+
+			if(needBroadcast) {
+				String nextMsgId = this.registeredName + msgId.getAndIncrement();
+				gossipMsg(2, 1, new String[]{nextMsgId, "unsubscribe", topic, String.valueOf(clientID)});
+			}
 		}
 
 		return true;
@@ -279,6 +310,100 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		}
 	}
 
+	// gossipMsg to k server for t times
+	// msg format: id, type, ...values
+	public void gossipMsg(int k, int t, String[] msg) throws RemoteException {
+		System.out.println();
+		System.out.println("Receive Gossip Msg: " + Arrays.toString(msg));
+		System.out.println();
+
+		synchronized(handledMsg) {
+			if(handledMsg.contains(msg[0])) return;
+			handledMsg.add(msg[0]);
+		}
+
+		if(msg[1].equals("createTopic")) {
+			createTopic(msg[2], false);
+		} else if(msg[1].equals("subscribe")) {
+			subscribe(msg[2], Integer.valueOf(msg[3]), false);
+		} else if(msg[1].equals("unsubscribe")) {
+			unsubscribe(msg[2], Integer.valueOf(msg[3]), false);
+		}
+
+		if(t > 0) {
+			HashSet<String> randomServers = getRandomServer(k);
+
+			// gossip 
+			for(String serverName : randomServers) {
+				if(!serverMap.containsKey(serverName)) {
+					try {
+						EventManager anotherServer = (EventManager) Naming.lookup(serverName);
+						serverMap.put(serverName, anotherServer);
+						serverMap.get(serverName).gossipMsg(k, t-1, msg);
+					} catch (Exception e) {
+						System.out.println("Can not find " + serverName);
+						System.out.println(e);
+					}
+				} else {
+					serverMap.get(serverName).gossipMsg(k, t-1, msg);
+				}
+			}
+		}
+	}
+
+	public void gossipMsg(int k, int t, String[] msg, EventClient c) throws RemoteException {
+		System.out.println();
+		System.out.println("Receive Gossip Msg: " + Arrays.toString(msg));
+		System.out.println();
+
+		synchronized(handledMsg) {
+			if(handledMsg.contains(msg[0])) return;
+			handledMsg.add(msg[0]);
+		}
+
+		if(msg[1].equals("addClient")) {
+			addClient(Integer.valueOf(msg[2]), c, false);
+		}
+
+		if(t > 0) {
+			HashSet<String> randomServers = getRandomServer(k);
+
+			// gossip 
+			for(String serverName : randomServers) {
+				if(!serverMap.containsKey(serverName)) {
+					try {
+						EventManager anotherServer = (EventManager) Naming.lookup(serverName);
+						serverMap.put(serverName, anotherServer);
+						serverMap.get(serverName).gossipMsg(k, t-1, msg, c);
+					} catch (Exception e) {
+						System.out.println("Can not find " + serverName);
+						System.out.println(e);
+					}
+				} else {
+					serverMap.get(serverName).gossipMsg(k, t-1, msg, c);
+				}
+			}
+		}
+	}
+
+	// get k random servers
+	private HashSet<String> getRandomServer(int k) throws RemoteException {
+		List<String> serverPool = new ArrayList<>(this.leader.getServerPool());
+		int size = Math.min(k, serverPool.size()-1);
+		Random rand = new Random();
+		HashSet<String> randomServers = new HashSet<>();
+
+		while(randomServers.size() < size) {
+			int idx = rand.nextInt(serverPool.size());
+			if(!serverPool.get(idx).equals(this.registeredName)) {
+				randomServers.add(serverPool.get(idx));
+			}
+		}
+
+		return randomServers;
+	}
+
+
 	public int getId() throws RemoteException {
 		return this.id;
 	}
@@ -329,7 +454,6 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		EventServer server = null;
 
 		try {
-    		//String hostName = InetAddress.getLocalHost().getHostAddress();
 			String hostName = "localhost";
 			String name = "//" + hostName + ":" + port + "/EventServer";
 			server = new EventServer(port, name);

@@ -1,6 +1,5 @@
 package pubsub;
 
-import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -18,8 +17,7 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 		this.id = id;
 
     	try {
-    		String hostName = InetAddress.getLocalHost().getHostAddress();
-			this.manager = (EventManager) Naming.lookup("//" + hostName + ":" + port + "/EventServer");
+			this.manager = (EventManager) Naming.lookup("//localhost:" + port + "/EventServer");
 			System.out.println("Connected to server at " + port);
 		} catch (Exception e) {
 			System.out.println(e);
@@ -50,14 +48,12 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 		}
 
 		PubSubClient client = new PubSubClient(id, port);
-		client.manager.addClient(id, client);
+		client.manager.addClient(id, client, true);
 		client.commandLineInterface();
 	}
-
-	
 	
 	private void subscribe(String topic) throws RemoteException {
-		boolean res = this.manager.subscribe(topic, id); 
+		boolean res = this.manager.subscribe(topic, id, true); 
 
 		if(!res) {
 			System.out.println("Topic doesn't exist");
@@ -65,7 +61,7 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 	}
 
 	private void unsubscribe(String topic) throws RemoteException {
-		boolean res = this.manager.unsubscribe(topic, id); 
+		boolean res = this.manager.unsubscribe(topic, id, true); 
 
 		if(!res) {
 			System.out.println("Topic doesn't exist");
@@ -81,7 +77,7 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 	}
 	
 	private void createTopic(String topic) throws RemoteException {
-		this.manager.createTopic(topic);
+		this.manager.createTopic(topic, true);
 	}
 	
 	public void commandLineInterface() throws RemoteException {

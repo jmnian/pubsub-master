@@ -22,5 +22,5 @@ java pubsub.EventServer -p xxxx
 
 start client to publish & subscribe
 ```
-java pubsub.PubSubClient -p 6666
+java pubsub.PubSubClient -p 6666 -d 1000
 ```

@@ -1,6 +1,5 @@
 package pubsub;
 
-import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -97,7 +96,7 @@ public class FailureDetector extends EventServer{
                 }
             }
         });
-        //Daemon allows this thread not to block program from exiting
+        // Daemon allows this thread not to block program from exiting
         t.setDaemon(true);
         t.start();
 	}
@@ -141,7 +140,6 @@ public class FailureDetector extends EventServer{
         FailureDetector fd = new FailureDetector();
         //register in RMI
         try {
-    		//String hostName = InetAddress.getLocalHost().getHostAddress();
 			String hostName = "localhost";
 			String name = "//" + hostName + ":" + port + "/FailureDetector";
     		Naming.rebind(name, fd);

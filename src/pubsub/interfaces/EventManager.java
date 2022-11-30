@@ -8,15 +8,18 @@ import java.util.Set;
 
 public interface EventManager extends Remote {
 
-	public void addClient(int id, EventClient c) throws RemoteException;
+	public void addClient(int id, EventClient c, boolean needBroadcast) throws RemoteException;
 	
-	public void createTopic(String topic) throws RemoteException;
+	public void createTopic(String topic, boolean needBroadcast) throws RemoteException;
 	
 	public boolean publish(String topic, String msg) throws RemoteException;
 	
-	public boolean subscribe(String topic, Integer clientID) throws RemoteException;
+	public boolean subscribe(String topic, Integer clientID, boolean needBroadcast) throws RemoteException;
 
-	public boolean unsubscribe(String topic, Integer clientID) throws RemoteException;
+	public boolean unsubscribe(String topic, Integer clientID, boolean needBroadcast) throws RemoteException;
+
+	public void gossipMsg(int k, int t, String[] msg) throws RemoteException;
+	public void gossipMsg(int k, int t, String[] msg, EventClient c) throws RemoteException;
 
 	public Set<String> getServerPool() throws RemoteException;
 
