@@ -55,34 +55,6 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
             Thread.sleep(1000);
         }
 	}
-    
-	public static void main(String[] args) throws Exception {
-		int id = -1;
-     	int port = 1099;
-
-		for (int i = 0; i < args.length; i ++) {	
-			if (args[i].equals("-p")) {
-				port = Integer.parseInt(args[++i]);
-			} else if (args[i].equals("-d")) {
-				id = Integer.parseInt(args[++i]);
-			} else {
-				System.out.println(args[i]);
-
-				System.out.println("Correct usage: java PubSubClient [-p <portnumber>] [-d <idnumber>]");
-				System.exit(1);
-			}
-		}
-
-		if(id == -1) {
-			System.out.println("Each client should have an unique ID");
-			System.exit(1);
-		}
-
-		PubSubClient client = new PubSubClient(id, port);
-		client.manager.addClient(id, client, true);
-		client.commandLineInterface();
-		client.runFailuerDetector();
-	}
 	
 	private void subscribe(String topic) throws RemoteException {
 		boolean res = this.manager.subscribe(topic, id, true); 
@@ -179,5 +151,34 @@ public class PubSubClient extends UnicastRemoteObject implements EventClient {
 		System.out.println("Message: " + msg);
 		System.out.println("Published under Topic: " + topic);
 		System.out.println();
+	}
+
+
+	public static void main(String[] args) throws Exception {
+		int id = -1;
+     	int port = 1099;
+
+		for (int i = 0; i < args.length; i ++) {	
+			if (args[i].equals("-p")) {
+				port = Integer.parseInt(args[++i]);
+			} else if (args[i].equals("-d")) {
+				id = Integer.parseInt(args[++i]);
+			} else {
+				System.out.println(args[i]);
+
+				System.out.println("Correct usage: java PubSubClient [-p <portnumber>] [-d <idnumber>]");
+				System.exit(1);
+			}
+		}
+
+		if(id == -1) {
+			System.out.println("Each client should have an unique ID");
+			System.exit(1);
+		}
+
+		PubSubClient client = new PubSubClient(id, port);
+		client.manager.addClient(id, client, true);
+		client.commandLineInterface();
+		client.runFailuerDetector();
 	}
 }

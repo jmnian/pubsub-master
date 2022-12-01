@@ -165,6 +165,7 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 	}
 
 	public void showTopics() {
+		System.out.println("Topics available are: ");
 		for(String topic : subscriptionMap.keySet()) {
 			System.out.println(topic);
 		}
@@ -177,6 +178,7 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 				System.out.println("Subscribers: ");
 				System.out.println(id);
 			}
+			System.out.println();
 		}
 	}
 
@@ -191,9 +193,16 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 		leader = null;
 		List<String> higher = getServersWithHigherOrLowerId("higher");
 		if (higher.size() == 0) {
+			// Announce leader to servers with lower Id 
 			announceLeader();
 			System.out.println("New leader " + registeredName + " has finished announcing victory");
 		} else {
+			// Ask all servers with higher Id to start bully()
+			// Wait for higher Id servers to send back ok
+			// if got none
+			//		announceLeader()
+			// if got less than expected 
+			// 		get servers with higher Id again, and do elect() again
 			elect(higher);
 		}
 	}
@@ -296,12 +305,11 @@ public class EventServer extends UnicastRemoteObject implements EventManager {
 	}
 
 	public void ok() throws RemoteException {
-		System.out.println(registeredName + " got an OK");
 		this.OKsReceived++;
 	}
 
 	public void setFailureDetector() throws RemoteException, MalformedURLException, NotBoundException {
-		String s = "//127.0.0.1:6666/FailureDetector";
+		String s = "//localhost:6666/FailureDetector";
 		this.failureDetector = (EventManager) Naming.lookup(s);
 		if (this.failureDetector == null) {
 			System.out.println("You should start Failure Detector first, then servers");
